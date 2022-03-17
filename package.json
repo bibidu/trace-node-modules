@@ -1,0 +1,24 @@
+{
+  "name": "trace-node-modules",
+  "version": "1.0.0",
+  "description": "",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "rimraf dist && NODE_ENV=development tsup src/index.ts --watch",
+    "build": "rimraf dist && NODE_ENV=production tsup src/index.ts --dts --minify"
+  },
+  "files": [
+    "dist/",
+    "src"
+  ],
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "esbuild-plugin-replace": "^1.1.0",
+    "rimraf": "^3.0.2",
+    "tsup": "^5.11.11",
+    "typescript": "^4.6.2"
+  },
+  "dependencies": {}
+}
