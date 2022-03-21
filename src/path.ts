@@ -1,10 +1,10 @@
-const nodePath = require("path");
-const { fs } = require("./fs");
+const path = require("path");
+import { _fs as fs } from "./fs";
 import { IPackageJSON } from "./Application";
 
 export interface IModuleInfo {
-  entryPath: string;
-  moduleAbsPath: string;
+  entryAbsPath: string;
+  moduleBasePath: string;
   modulePkgJSONPath: string;
   pkgJSON: IPackageJSON;
 }
@@ -14,36 +14,46 @@ interface IPath {
 }
 
 export class Path implements IPath {
-  findModulePath(basePath: string, ...paths: string[]): IModuleInfo {
+  findModulePath(
+    basePath: string,
+    modulePathWithNodeModules: string
+  ): IModuleInfo {
     let modulePkgJSONPath;
-    while (
-      !(modulePkgJSONPath = this.join(basePath, ...paths, "package.json")) &&
-      nodePath.dirname(basePath) !== basePath
-    ) {
-      basePath = nodePath.dirname(basePath);
-    }
-
-    if (!modulePkgJSONPath) {
-      throw Error(`不存在 module ${paths.join(".")}!`);
-    }
-
     let pkgJSON;
-    try {
-      pkgJSON = fs.readJSONSync(modulePkgJSONPath);
-    } catch (error) {
-      return null;
+
+    while (true) {
+      modulePkgJSONPath = this.join(
+        basePath,
+        modulePathWithNodeModules,
+        "package.json"
+      );
+      try {
+        pkgJSON = fs.readJSONSync(modulePkgJSONPath);
+        const entryAbsPath = this.join(
+          basePath,
+          modulePathWithNodeModules,
+          pkgJSON.main || "index.js"
+        );
+        const moduleBasePath = this.join(basePath, modulePathWithNodeModules);
+
+        return {
+          entryAbsPath,
+          moduleBasePath,
+          modulePkgJSONPath,
+          pkgJSON,
+        };
+      } catch (error) {
+        if (path.dirname(basePath) === basePath) {
+          return null;
+        }
+        basePath = path.dirname(basePath);
+      }
     }
-    return {
-      entryPath: this.join(...paths, pkgJSON.main || "index.js"),
-      moduleAbsPath: this.join(...paths),
-      modulePkgJSONPath,
-      pkgJSON,
-    };
   }
 
   join(...paths: string[]): string {
-    return nodePath.join(...paths);
+    return path.join(...paths);
   }
 }
 
-export const path = new Path();
+export const _path = new Path();
